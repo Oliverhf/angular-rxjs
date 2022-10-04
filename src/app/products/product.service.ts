@@ -51,7 +51,7 @@ export class ProductService {
   selectedProductChanged(selectedProductId: number): void {
     this.productSelectedSubject.next(selectedProductId);
   }
-  
+
   private fakeProduct(): Product {
     return {
       id: 42,
