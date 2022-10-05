@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { BehaviorSubject, catchError, combineLatest, map, merge, Observable, scan, shareReplay, Subject, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, filter, forkJoin, map, merge, Observable, of, scan, shareReplay, Subject, switchMap, tap, throwError } from 'rxjs';
 
 import { Product } from './product';
 import { ProductCategoryService } from '../product-categories/product-category.service';
 import { SupplierService } from '../suppliers/supplier.service';
+import { Supplier } from '../suppliers/supplier';
 
 @Injectable({
   providedIn: 'root'
@@ -48,6 +49,30 @@ export class ProductService {
       tap(product => console.log('selectedProduct', product)),
       shareReplay(1)
     )
+
+    // selectedProductSuppliers$ = combineLatest([
+    //   this.selectedProduct$,
+    //   this.supplierService.suppliers$
+    // ]).pipe(
+    //   map(([selectedProduct, suppliers]) => 
+    //     suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id))
+    //   )
+    // )
+
+    selectedProductSuppliers$ = this.selectedProduct$
+      .pipe(
+        filter(product => Boolean(product)), // We leverage the Boolean function technique to check for undefined or null
+        switchMap(selectedProduct => { // We react every time the user selects a product by mapping that product to an Observable using switchMap
+          if(selectedProduct?.supplierIds) { // Which Observable we map depends on the selected product
+            return forkJoin(selectedProduct.supplierIds.map(supplierId => // When the selectd product has a set of supplier IDs, we forkJoin
+              this.http.get<Supplier>(`${this.suppliersUrl}/${supplierId}`)  
+            ))
+          } else { // Otherwise we return an observable that emits an empty array
+            return of([]);
+          }
+        }),
+        tap(suppliers => console.log('product suppliers', JSON.stringify(suppliers))) // Added a tap to display the uppliers to the console
+      )
 
     productInsertedSubject =  new Subject<Product>();
     productInsertedAction$ = this.productInsertedSubject.asObservable();
