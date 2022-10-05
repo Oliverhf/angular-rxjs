@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { throwError, Observable, of, map, concatMap, tap } from 'rxjs';
+import { throwError, Observable, of, map, concatMap, tap, mergeMap, switchMap } from 'rxjs';
 import { Supplier } from './supplier';
 
 @Injectable({
@@ -16,16 +16,39 @@ export class SupplierService {
     )
 
   suppliersWithConcatMap$ = of(1, 5, 8) // here we define an observable of IDs
-      .pipe(
-        tap(id => console.log('concatMap source Observable', id)), // We pipe each ID through a set of operators. Use tap to log the ID coming in from the source observable
-        concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)) // We use concatMap to transform our ID values into new inner obervables and then flatten the result to the output stream
-      );
+    .pipe(
+      tap(id => console.log('concatMap source Observable', id)), // We pipe each ID through a set of operators. Use tap to log the ID coming in from the source observable
+      concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)) // We use concatMap to transform our ID values into new inner obervables and then flatten the result to the output stream
+    );
+
+  suppliersWithMergeMap$ = of(1, 5, 8) // here we define an observable of IDs
+    .pipe(
+      tap(id => console.log('mergeMap source Observable', id)), // We pipe each ID through a set of operators. Use tap to log the ID coming in from the source observable
+      mergeMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)) // We use concatMap to transform our ID values into new inner obervables and then flatten the result to the output stream
+    );
+
+  suppliersWithswitchMap$ = of(1, 5, 8) // here we define an observable of IDs
+    .pipe(
+      tap(id => console.log('switchMap source Observable', id)), // We pipe each ID through a set of operators. Use tap to log the ID coming in from the source observable
+      switchMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)) // We use concatMap to transform our ID values into new inner obervables and then flatten the result to the output stream
+    );
+    
+  
+    
+  
 
   constructor(private http: HttpClient) { 
-    this.suppliersWithConcatMap$.subscribe(
-      item => console.log('concatMap result', item)
-    )
+    // this.suppliersWithConcatMap$.subscribe(
+    //   item => console.log('concatMap result', item)
+    // )
 
+    // this.suppliersWithMergeMap$.subscribe(
+    //   item => console.log('mergeMap result', item)
+    // )
+    
+    // this.suppliersWithswitchMap$.subscribe(
+    //   item => console.log('switchMap result', item)
+    // )
     // this.suppliersWithMap$.subscribe(o => o.subscribe(
     //   item => console.log('map result', item))
     // )
